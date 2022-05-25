@@ -1,0 +1,86 @@
+import numpy as np 
+import pandas as pd
+import os
+import numpy as np
+import pandas as pd
+import nltk
+import string
+import re
+from nltk.stem.porter import PorterStemmer
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import stopwords
+import matplotlib.pyplot as plt
+from nltk.tokenize import RegexpTokenizer
+from sklearn.feature_extraction.text import TfidfVectorizer,CountVectorizer
+from sklearn.metrics.pairwise import linear_kernel,cosine_similarity
+from ast import literal_eval
+import warnings
+warnings.filterwarnings('ignore')
+import nltk
+nltk.download('stopwords')
+from google.colab import files
+uploaded=files.upload()
+from google.colab import files
+uploaded=files.upload()
+import io
+dataframe_1.head(5)
+dataframe_2.head(5)
+dataframe_1.columns = ['id','title_x','cast','crew']
+dataframe_2 = dataframe_2.merge(dataframe_1,on = 'id')
+dataframe_2.head(5)
+print('Rows x Columns : ', dataframe_2.shape[0], 'x', dataframe_2.shape[1])
+print('Features: ', dataframe_2.columns.tolist())
+print('nUnique values:')
+print(dataframe_2.nunique())
+dataframe_2.info()
+print('nMissing values:  ', dataframe_2.isnull().sum().values.sum())
+dataframe_2.isnull().sum()
+dataframe_2.describe().T
+dataframe_2['overview']=dataframe_2['overview'].str.lower()
+dataframe_2['overview'] = dataframe_2['overview'].astype(str)
+string.punctuation
+def remove_punctuation(text):
+    punctuationfree="".join([i for i in text if i not in string.punctuation])
+    return punctuationfree
+#storing the puntuation free text
+dataframe_2['clean_descripetion']= dataframe_2['overview'].apply(lambda x:remove_punctuation(x))
+
+#defining function for tokenization
+def tokenization(text):
+    tokens = re.split('W+',text)
+    return tokens
+#applying function to the column
+dataframe_2['TOK-clean_descripetion']= dataframe_2['clean_descripetion'].apply(lambda x: tokenization(x))
+#Stop words present in the library
+stopwords = nltk.corpus.stopwords.words('english')
+#defining the function to remove stopwords from tokenized text
+def remove_stopwords(text):
+    output= [i for i in text if i not in stopwords]
+    return output
+#applying the function
+dataframe_2['descripetion_no_stopwords']= dataframe_2['TOK-clean_descripetion'].apply(lambda x:remove_stopwords(x))
+
+#defining the object for stemming
+##porter_stemmer = PorterStemmer()
+#defining a function for stemming
+#def stemming(text):
+#stem_text = [porter_stemmer.stem(word) for word in text]
+    #return stem_text
+#dataframe_2['descripetion_stemmed']=dataframe_2['descripetion_no_stopwords'].apply(lambda x: stemming(x))
+dataframe_2.head()
+tfidf = TfidfVectorizer( stop_words='english' )
+dataframe_2['overview'] = dataframe_2['overview'].fillna('')
+tfidf_matrix = tfidf.fit_transform(dataframe_2['overview'])
+tfidf_matrix.shape
+cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
+cosine_sim.shape
+indices = pd.Series(dataframe_2.index, index=dataframe_2['title']).drop_duplicates()
+def get_recommendations(title,cosine_sim = cosine_sim):
+    idx = indices[title]
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    sim_scores = sim_scores[1:11]
+    movie_indices = [i[0] for i in sim_scores]
+    return dataframe_2['title'].iloc[movie_indices]
+get_recommendations('The Dark Knight Rises')
+get_recommendations('The Godfather')
